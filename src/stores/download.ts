@@ -22,6 +22,9 @@ interface ProgressPayload {
   eta: string;
   downloaded: string;
   total: string;
+  videoTitle?: string;
+  playlistIndex?: string;
+  playlistCount?: string;
   fragmentIndex?: number;
   fragmentCount?: number;
   status?: string;
@@ -80,6 +83,9 @@ export const useDownloadStore = defineStore("download", () => {
 
           const id = next.id;
           next.params = normalizeTaskParams(next.params);
+          delete next.currentVideoTitle;
+          delete next.currentPlaylistIndex;
+          delete next.currentPlaylistCount;
           next.status = "downloading";
           startingIds.add(id);
           const starting = invoke("start_download", { params: { id, ...next.params } });
@@ -224,6 +230,9 @@ export const useDownloadStore = defineStore("download", () => {
           if (event.payload.percent > 0) task.percent = event.payload.percent;
           if (event.payload.downloaded) task.downloaded = event.payload.downloaded;
           if (event.payload.total) task.total = event.payload.total;
+          if (event.payload.videoTitle) task.currentVideoTitle = event.payload.videoTitle;
+          if (event.payload.playlistIndex) task.currentPlaylistIndex = event.payload.playlistIndex;
+          if (event.payload.playlistCount) task.currentPlaylistCount = event.payload.playlistCount;
         } else {
           task.status = "downloading";
           task.percent = event.payload.percent;
@@ -231,6 +240,9 @@ export const useDownloadStore = defineStore("download", () => {
           task.eta = event.payload.eta;
           if (event.payload.downloaded) task.downloaded = event.payload.downloaded;
           if (event.payload.total) task.total = event.payload.total;
+          if (event.payload.videoTitle) task.currentVideoTitle = event.payload.videoTitle;
+          if (event.payload.playlistIndex) task.currentPlaylistIndex = event.payload.playlistIndex;
+          if (event.payload.playlistCount) task.currentPlaylistCount = event.payload.playlistCount;
         }
       }
       updateTaskbarProgress();

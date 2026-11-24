@@ -8,10 +8,10 @@ A modern, beautiful desktop GUI for [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 
 Download videos from YouTube, Bilibili, Twitter/X and [1000+ websites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md) with ease.
 
-[![License](https://img.shields.io/github/license/imsyy/yt-dlp-gui?color=f0f0f0&labelColor=555555)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/imsyy/yt-dlp-gui?color=f0f0f0&labelColor=555555)](https://github.com/imsyy/yt-dlp-gui/releases)
-[![Stars](https://img.shields.io/github/stars/imsyy/yt-dlp-gui?style=flat&color=f0f0f0&labelColor=555555)](https://github.com/imsyy/yt-dlp-gui)
-[![Downloads](https://img.shields.io/github/downloads/imsyy/yt-dlp-gui/total?color=f0f0f0&labelColor=555555)](https://github.com/imsyy/yt-dlp-gui/releases)
+[![License](https://img.shields.io/github/license/ha-3-et/yt-dlp-gui?color=f0f0f0&labelColor=555555)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/ha-3-et/yt-dlp-gui?color=f0f0f0&labelColor=555555)](https://github.com/ha-3-et/yt-dlp-gui/releases)
+[![Stars](https://img.shields.io/github/stars/ha-3-et/yt-dlp-gui?style=flat&color=f0f0f0&labelColor=555555)](https://github.com/ha-3-et/yt-dlp-gui)
+[![Downloads](https://img.shields.io/github/downloads/ha-3-et/yt-dlp-gui/total?color=f0f0f0&labelColor=555555)](https://github.com/ha-3-et/yt-dlp-gui/releases)
 
 **English** | [简体中文](./README.zh-CN.md)
 
@@ -78,7 +78,7 @@ yt-dlp is powerful, but its command-line interface can be intimidating. **yt-dlp
 
 ### Download
 
-Grab the latest release for your platform from [**Releases**](https://github.com/imsyy/yt-dlp-gui/releases):
+Grab the latest release for your platform from [**Releases**](https://github.com/ha-3-et/yt-dlp-gui/releases):
 
 | Platform | File |
 |----------|------|
@@ -175,7 +175,7 @@ The extension is bundled with the app — no separate download required.
 
 ```bash
 # Clone the repository
-git clone https://github.com/imsyy/yt-dlp-gui.git
+git clone https://github.com/ha-3-et/yt-dlp-gui.git
 cd yt-dlp-gui
 
 # Install dependencies
@@ -190,7 +190,7 @@ pnpm tauri:build
 
 ## Contributing
 
-Contributions are welcome! Feel free to open an [issue](https://github.com/imsyy/yt-dlp-gui/issues) or submit a pull request.
+Contributions are welcome! Feel free to open an [issue](https://github.com/ha-3-et/yt-dlp-gui/issues) or submit a pull request.
 
 ## License
 

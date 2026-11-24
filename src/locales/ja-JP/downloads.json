@@ -5,6 +5,8 @@
     "noActiveTasks": "進行中のダウンロードはありません",
     "noFinishedTasks": "完了したタスクはありません",
     "noLogs": "ログはまだありません...",
+    "currentPlaylistVideo": "再生リスト {count} 本中 {index} 本目：{title}",
+    "currentPlaylistVideoNoCount": "再生リスト {index} 本目：{title}",
     "today": "今日",
     "yesterday": "昨日",
     "dayBeforeYesterday": "一昨日",

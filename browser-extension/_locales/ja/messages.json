@@ -1,0 +1,108 @@
+{
+  "extName": {
+    "message": "YDL GUI 連携ヘルパー"
+  },
+  "extDesc": {
+    "message": "動画の URL や Cookie をブラウザーから YDL GUI デスクトップアプリに送信します。"
+  },
+  "languageLabel": {
+    "message": "表示言語"
+  },
+  "popupSupported": {
+    "message": "このページを yt-dlp に送信できます"
+  },
+  "popupUnsupported": {
+    "message": "送信できるのは HTTP または HTTPS のページです"
+  },
+  "popupChecking": {
+    "message": "ページを確認中…"
+  },
+  "popupSendCookies": {
+    "message": "ページの Cookie も送信"
+  },
+  "popupSendCookiesHint": {
+    "message": "会員限定またはログインが必要な動画の取得に必要です"
+  },
+  "popupSendBtn": {
+    "message": "YDL GUI に送信"
+  },
+  "popupSending": {
+    "message": "送信中…"
+  },
+  "popupSent": {
+    "message": "送信しました。YDL GUI を確認してください"
+  },
+  "popupFailed": {
+    "message": "送信できませんでした。もう一度お試しください"
+  },
+  "popupAppNotFoundTitle": {
+    "message": "アプリが開きませんか？"
+  },
+  "popupAppNotFoundDesc": {
+    "message": "反応がない場合は、YDL GUI がインストールされ、起動していることを確認してください。"
+  },
+  "popupDownload": {
+    "message": "YDL GUI をダウンロード"
+  },
+  "menuSendPage": {
+    "message": "このページを YDL GUI に送信"
+  },
+  "menuSendLink": {
+    "message": "リンクを YDL GUI でダウンロード"
+  },
+  "menuSendSelection": {
+    "message": "選択した URL を YDL GUI に送信"
+  },
+  "notifyTitle": {
+    "message": "YDL GUI 連携ヘルパー"
+  },
+  "notifySent": {
+    "message": "YDL GUI にリクエストを送信しました"
+  },
+  "notifyFailed": {
+    "message": "YDL GUI を開けませんでした。アプリがインストールされているか確認してください。"
+  },
+  "notifyUnsupported": {
+    "message": "この URL は対応している動画サイトのものではありません。"
+  },
+  "modeStandard": {
+    "message": "通常"
+  },
+  "modeBatch": {
+    "message": "一括"
+  },
+  "popupBatchTabsTitle": {
+    "message": "現在のウィンドウのタブ"
+  },
+  "popupSelectAll": {
+    "message": "すべて選択"
+  },
+  "popupDeselectAll": {
+    "message": "すべて解除"
+  },
+  "popupSelectedCount": {
+    "message": "$COUNT$ 個のタブを選択中",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupSendBatchBtn": {
+    "message": "選択したタブを YDL GUI に送信（$COUNT$）",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupNoValidTabs": {
+    "message": "有効なウェブページのタブがありません"
+  },
+  "popupWakingApp": {
+    "message": "YDL GUI を起動しています…"
+  },
+  "menuSendAllTabs": {
+    "message": "すべてのタブを YDL GUI に一括送信"
+  }
+}

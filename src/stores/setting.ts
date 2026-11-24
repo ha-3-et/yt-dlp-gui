@@ -49,6 +49,7 @@ export const useSettingStore = defineStore(
 
     /** 下载目录 */
     const downloadDir = ref("");
+    const thumbnailDownloadDir = ref("");
 
     /** Cookie 模式 */
     const cookieMode = ref<"none" | "text" | "file" | "browser">("none");
@@ -137,19 +138,21 @@ export const useSettingStore = defineStore(
 
     /** 启动时自动检查更新 */
     const autoCheckUpdate = ref(true);
+    const autoUpdateTools = ref(true);
+    const nextToolUpdateAt = ref(0);
 
     /** 每个外部工具独立选择应用管理版本或系统 PATH 版本 */
     const ytdlpSource = ref<"managed" | "system" | "local">("managed");
     const ytdlpLocalPath = ref("");
     const denoSource = ref<"managed" | "system">("managed");
     const jsRuntime = ref<"deno" | "node" | "bun" | "quickjs">("deno");
-    const ffmpegSource = ref<"managed" | "system">("system");
+    const ffmpegSource = ref<"managed" | "system">("managed");
 
     /** 内置 yt-dlp 的发行通道：stable（稳定版）/ nightly（每日构建）/ master（最新提交构建） */
-    const ytdlpChannel = ref<YtdlpChannel>("stable");
+    const ytdlpChannel = ref<YtdlpChannel>("nightly");
 
     /** 内置 yt-dlp 当前已安装构建所属的通道；跨通道切换（含降级）时以此判断是否需要重新下载 */
-    const ytdlpInstalledChannel = ref<YtdlpChannel>("stable");
+    const ytdlpInstalledChannel = ref<YtdlpChannel>("nightly");
 
     /** YouTube PO Token（用于绕过 403 / 限流） */
     const youtubePoToken = ref("");
@@ -180,6 +183,7 @@ export const useSettingStore = defineStore(
       quickFfmpegArgs,
       quickCustomArgs,
       downloadDir,
+      thumbnailDownloadDir,
       cookieMode,
       cookieText,
       cookieFile,
@@ -217,6 +221,8 @@ export const useSettingStore = defineStore(
       showHomeTips,
       startMaximized,
       autoCheckUpdate,
+      autoUpdateTools,
+      nextToolUpdateAt,
       ytdlpSource,
       ytdlpLocalPath,
       denoSource,

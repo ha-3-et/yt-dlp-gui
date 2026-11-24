@@ -82,6 +82,7 @@
     "showTrayIcon": "Show system tray icon",
     "closeToTray": "Minimize to tray on close",
     "autoCheckUpdate": "Check for updates on startup",
+    "autoUpdateTools": "Update managed tools weekly (yt-dlp nightly, Deno, FFmpeg + FFprobe)",
     "pathResolveMode": "Tool Path Priority",
     "pathModeSystemPreferred": "System Preferred",
     "pathModeAppOnly": "App Only",

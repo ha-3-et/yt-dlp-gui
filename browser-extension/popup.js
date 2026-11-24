@@ -32,6 +32,11 @@ const applyI18n = () => {
     const localizedText = translate(translationKey);
     if (localizedText) domElement.textContent = localizedText;
   });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((domElement) => {
+    const translationKey = domElement.getAttribute("data-i18n-aria-label");
+    const localizedText = translate(translationKey);
+    if (localizedText) domElement.setAttribute("aria-label", localizedText);
+  });
 };
 
 /**

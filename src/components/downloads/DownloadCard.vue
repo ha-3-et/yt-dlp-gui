@@ -109,6 +109,15 @@ const sizeProgress = computed<string>(() => {
   return "";
 });
 
+const currentPlaylistVideo = computed(() => {
+  const { currentVideoTitle: title, currentPlaylistIndex: index, currentPlaylistCount: count } =
+    props.task;
+  if (!title || !index) return "";
+  return count
+    ? t("downloads.currentPlaylistVideo", { index, count, title })
+    : t("downloads.currentPlaylistVideoNoCount", { index, title });
+});
+
 const logContent = computed<string>(() => {
   return props.task.logs.join("\n") || t("downloads.noLogs");
 });
@@ -320,6 +329,14 @@ const handleRemove = () => {
             {{ task.title }}
           </n-ellipsis>
         </n-flex>
+
+        <n-ellipsis
+          v-if="currentPlaylistVideo && isActive"
+          :line-clamp="1"
+          class="current-playlist-video"
+        >
+          {{ currentPlaylistVideo }}
+        </n-ellipsis>
 
         <n-progress
           :percentage="isCompleted ? 100 : task.percent"
@@ -572,6 +589,12 @@ const handleRemove = () => {
     font-weight: 600;
     line-height: 1.4;
   }
+}
+
+.current-playlist-video {
+  width: 100%;
+  min-width: 0;
+  font-size: 12px;
 }
 
 .error-popover-content {

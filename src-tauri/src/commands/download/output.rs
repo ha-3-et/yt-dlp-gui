@@ -48,6 +48,9 @@ fn process_output_line(
                 "total": info.total,
                 "fragmentIndex": info.fragment_index,
                 "fragmentCount": info.fragment_count,
+                "videoTitle": info.video_title,
+                "playlistIndex": info.playlist_index,
+                "playlistCount": info.playlist_count,
                 "status": info.status,
             }),
         );

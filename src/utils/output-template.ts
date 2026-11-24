@@ -1,4 +1,8 @@
-export const DEFAULT_OUTPUT_TEMPLATE = "%(title).200s [%(id)s].%(ext)s";
+export const LEGACY_DEFAULT_OUTPUT_TEMPLATES = [
+  "%(title).200s [%(id)s].%(ext)s",
+  "%(title).200s.%(ext)s",
+] as const;
+export const DEFAULT_OUTPUT_TEMPLATE = "%(title)s.%(ext)s";
 
 /** 扩展名后缀：最终传给 yt-dlp 的模板必须恰好以它结尾。 */
 export const EXT_SUFFIX = ".%(ext)s";
@@ -95,3 +99,28 @@ export const composeOutputTemplate = (
   const literalSuffix = suffix.replace(/%/g, "%%");
   return `${directory}${playlistDirectory}${literalPrefix}${filename}${literalSuffix}${EXT_SUFFIX}`;
 };
+
+/** Apply the supported yt-dlp output-template fields to a local filename. */
+export const renderOutputTemplate = (
+  template: string,
+  values: Record<string, string | number | null | undefined>,
+): string =>
+  template.replace(
+    /%%|%\(([^)]+)\)([-+ #0-9.*]*)([diouxXeEfFgGcrsBjhlqDSU])/g,
+    (match, fieldExpression: string | undefined, format: string, conversion: string) => {
+      if (match === "%%") return "%";
+      const [alternatives, fallback] = (fieldExpression || "").split("|");
+      const value = alternatives
+        .split(",")
+        .map((field) => values[field.trim()])
+        .find((item) => item !== null && item !== undefined && item !== "");
+      const text = String(value ?? fallback ?? "");
+      const precision = format.match(/\.(\d+)/)?.[1];
+      if (conversion === "s" && precision) return Array.from(text).slice(0, Number(precision)).join("");
+      if (/[diu]/.test(conversion) && /^-?\d+$/.test(text)) {
+        const width = Number(format.match(/(?:^|[^.])0?(\d+)/)?.[1] || 0);
+        return text.padStart(width, format.includes("0") ? "0" : " ");
+      }
+      return text;
+    },
+  );

@@ -8,10 +8,10 @@
 
 支持 YouTube、Bilibili、Twitter/X 等 [1000+ 网站](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)的视频下载。
 
-[![License](https://img.shields.io/github/license/imsyy/yt-dlp-gui?color=f0f0f0&labelColor=555555)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/imsyy/yt-dlp-gui?color=f0f0f0&labelColor=555555)](https://github.com/imsyy/yt-dlp-gui/releases)
-[![Stars](https://img.shields.io/github/stars/imsyy/yt-dlp-gui?style=flat&color=f0f0f0&labelColor=555555)](https://github.com/imsyy/yt-dlp-gui)
-[![Downloads](https://img.shields.io/github/downloads/imsyy/yt-dlp-gui/total?color=f0f0f0&labelColor=555555)](https://github.com/imsyy/yt-dlp-gui/releases)
+[![License](https://img.shields.io/github/license/ha-3-et/yt-dlp-gui?color=f0f0f0&labelColor=555555)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/ha-3-et/yt-dlp-gui?color=f0f0f0&labelColor=555555)](https://github.com/ha-3-et/yt-dlp-gui/releases)
+[![Stars](https://img.shields.io/github/stars/ha-3-et/yt-dlp-gui?style=flat&color=f0f0f0&labelColor=555555)](https://github.com/ha-3-et/yt-dlp-gui)
+[![Downloads](https://img.shields.io/github/downloads/ha-3-et/yt-dlp-gui/total?color=f0f0f0&labelColor=555555)](https://github.com/ha-3-et/yt-dlp-gui/releases)
 
 [English](./README.md) | **简体中文**
 
@@ -78,7 +78,7 @@ yt-dlp 功能强大，但命令行操作门槛较高。**yt-dlp GUI** 将其封�
 
 ### 下载安装
 
-前往 [**Releases**](https://github.com/imsyy/yt-dlp-gui/releases) 下载对应平台的安装包：
+前往 [**Releases**](https://github.com/ha-3-et/yt-dlp-gui/releases) 下载对应平台的安装包：
 
 | 平台 | 文件 |
 |------|------|
@@ -175,7 +175,7 @@ yt-dlp-gui --url "https://example.com/video" \
 
 ```bash
 # 克隆仓库
-git clone https://github.com/imsyy/yt-dlp-gui.git
+git clone https://github.com/ha-3-et/yt-dlp-gui.git
 cd yt-dlp-gui
 
 # 安装依赖
@@ -190,7 +190,7 @@ pnpm tauri:build
 
 ## 参与贡献
 
-欢迎提交 [Issue](https://github.com/imsyy/yt-dlp-gui/issues) 或 Pull Request。
+欢迎提交 [Issue](https://github.com/ha-3-et/yt-dlp-gui/issues) 或 Pull Request。
 
 ## 开源协议
 

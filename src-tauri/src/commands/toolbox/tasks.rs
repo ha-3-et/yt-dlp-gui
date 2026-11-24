@@ -46,8 +46,19 @@ fn result_total(tool_id: &str, value: &Value) -> i64 {
     if tool_id == "livechat" {
         return value.as_array().map(|items| items.len() as i64).unwrap_or_default();
     }
+    if tool_id == "thumbnail" {
+        return value
+            .get("expectedCount")
+            .and_then(Value::as_i64)
+            .or_else(|| {
+                value
+                    .get("items")
+                    .and_then(Value::as_array)
+                    .map(|items| items.len() as i64)
+            })
+            .unwrap_or_default();
+    }
     let key = match tool_id {
-        "thumbnail" => "thumbnails",
         "chapters" => "chapters",
         "comments" => "comments",
         _ => return 0,

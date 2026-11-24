@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "yt-dlp-gui",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A modern, cross-platform desktop GUI for yt-dlp — download videos from YouTube, Bilibili, Twitter and 1000+ sites. Built with Tauri 2 + Vue 3.",
   "keywords": [
     "yt-dlp",
@@ -24,11 +24,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/imsyy/yt-dlp-gui"
+    "url": "https://github.com/ha-3-et/yt-dlp-gui"
   },
-  "homepage": "https://github.com/imsyy/yt-dlp-gui#readme",
+  "homepage": "https://github.com/ha-3-et/yt-dlp-gui#readme",
   "bugs": {
-    "url": "https://github.com/imsyy/yt-dlp-gui/issues"
+    "url": "https://github.com/ha-3-et/yt-dlp-gui/issues"
   },
   "engines": {
     "node": ">=22"

@@ -9,6 +9,9 @@ pub struct ProgressInfo {
     pub total: String,
     pub fragment_index: Option<u64>,
     pub fragment_count: Option<u64>,
+    pub video_title: String,
+    pub playlist_index: String,
+    pub playlist_count: String,
     pub status: String,
 }
 
@@ -32,6 +35,9 @@ pub fn parse_progress_json(line: &str) -> Option<ProgressInfo> {
     let total = clean_field(v["total"].as_str());
     let fragment_index = v["fragmentIndex"].as_u64();
     let fragment_count = v["fragmentCount"].as_u64();
+    let video_title = v["videoTitle"].as_str().unwrap_or_default().to_string();
+    let playlist_index = v["playlistIndex"].as_str().unwrap_or_default().to_string();
+    let playlist_count = v["playlistCount"].as_str().unwrap_or_default().to_string();
     let status = v["status"].as_str().unwrap_or("downloading").to_string();
 
     Some(ProgressInfo {
@@ -42,6 +48,9 @@ pub fn parse_progress_json(line: &str) -> Option<ProgressInfo> {
         total,
         fragment_index,
         fragment_count,
+        video_title,
+        playlist_index,
+        playlist_count,
         status,
     })
 }

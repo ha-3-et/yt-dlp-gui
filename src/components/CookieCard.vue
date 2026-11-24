@@ -92,6 +92,7 @@ const handleSelectFile = async () => {
   });
   if (selected) {
     settingStore.cookieFile = selected as string;
+    settingStore.cookieMode = "file";
   }
 };
 </script>

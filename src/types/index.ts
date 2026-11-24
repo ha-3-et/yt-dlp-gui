@@ -206,6 +206,9 @@ export interface DownloadTask {
   eta: string;
   downloaded: string;
   total: string;
+  currentVideoTitle?: string;
+  currentPlaylistIndex?: string;
+  currentPlaylistCount?: string;
   fileSizeBytes?: number;
   logs: string[];
   error?: string;
@@ -271,6 +274,28 @@ export interface ThumbnailInfo {
   width?: number;
   resolution?: string;
   id?: string;
+}
+
+export interface ThumbnailVideoResult {
+  id: string;
+  title: string;
+  thumbnail: string;
+  thumbnails: ThumbnailInfo[];
+  playlistTitle: string;
+  playlistId?: string;
+  playlistIndex: number | null;
+  sourceUrl: string;
+  uploader?: string;
+  uploadDate?: string;
+  duration?: number;
+  videoHeight?: number;
+  videoResolution?: string;
+}
+
+export interface ThumbnailBatchResult {
+  items: ThumbnailVideoResult[];
+  errors: { url: string; error: string }[];
+  expectedCount?: number;
 }
 
 export interface VideoInfo {

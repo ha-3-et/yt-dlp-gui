@@ -3,10 +3,16 @@
  * 负责管理扩展语言偏好设置、加载对应的 messages.json 语言包并提供翻译函数。
  */
 
-const DEFAULT_LANGUAGE = "en";
-const SUPPORTED_LANGUAGES = new Set(["en", "zh_CN"]);
+const SUPPORTED_LANGUAGES = new Set(["en", "ja", "zh_CN"]);
 let cachedLanguage;
 let cachedMessages;
+
+const getBrowserLanguage = () => {
+  const browserLanguage = chrome.i18n.getUILanguage().toLowerCase();
+  if (browserLanguage.startsWith("ja")) return "ja";
+  if (browserLanguage.startsWith("zh")) return "zh_CN";
+  return "en";
+};
 
 /**
  * 获取当前已配置或默认使用的语言标识
@@ -18,7 +24,7 @@ export const getLanguage = async () => {
   const storedConfig = await chrome.storage.local.get("language");
   cachedLanguage = SUPPORTED_LANGUAGES.has(storedConfig.language)
     ? storedConfig.language
-    : DEFAULT_LANGUAGE;
+    : getBrowserLanguage();
   return cachedLanguage;
 };
 
@@ -31,7 +37,7 @@ export const getLanguage = async () => {
 export const setLanguage = async (nextLanguage) => {
   cachedLanguage = SUPPORTED_LANGUAGES.has(nextLanguage)
     ? nextLanguage
-    : DEFAULT_LANGUAGE;
+    : getBrowserLanguage();
   cachedMessages = undefined;
   await chrome.storage.local.set({ language: cachedLanguage });
 };

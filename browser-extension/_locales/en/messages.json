@@ -5,6 +5,9 @@
   "extDesc": {
     "message": "Send video URLs and cookies from your browser to the YDL GUI desktop app."
   },
+  "languageLabel": {
+    "message": "Language"
+  },
   "popupSupported": {
     "message": "This page can be sent to yt-dlp"
   },

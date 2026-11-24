@@ -188,6 +188,10 @@ watch(
           <span class="info-label">{{ $t("settings.autoCheckUpdate") }}</span>
           <n-switch v-model:value="settingStore.autoCheckUpdate" />
         </div>
+        <div class="info-row">
+          <span class="info-label">{{ $t("settings.autoUpdateTools") }}</span>
+          <n-switch v-model:value="settingStore.autoUpdateTools" />
+        </div>
       </div>
     </n-card>
 
@@ -336,7 +340,7 @@ watch(
             <n-button
               text
               tag="a"
-              href="https://github.com/imsyy/yt-dlp-gui"
+              href="https://github.com/ha-3-et/yt-dlp-gui"
               target="_blank"
               size="tiny"
             >

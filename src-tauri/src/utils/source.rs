@@ -43,7 +43,7 @@ impl Default for ToolSources {
             ytdlp: ToolSource::Managed,
             ytdlp_local_path: String::new(),
             deno: ToolSource::Managed,
-            ffmpeg: ToolSource::System,
+            ffmpeg: ToolSource::Managed,
         }
     }
 }
@@ -237,8 +237,8 @@ pub fn build_youtube_extractor_args() -> Vec<String> {
 /// yt-dlp 官方的三个发行通道，详见 yt-dlp README "UPDATE" 章节。
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub enum YtdlpChannel {
-    #[default]
     Stable,
+    #[default]
     Nightly,
     Master,
 }

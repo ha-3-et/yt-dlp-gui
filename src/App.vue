@@ -136,7 +136,7 @@ onMounted(async () => {
             quaternary
             circle
             tag="a"
-            href="https://github.com/imsyy/yt-dlp-gui"
+            href="https://github.com/ha-3-et/yt-dlp-gui"
             target="_blank"
           >
             <template #icon>

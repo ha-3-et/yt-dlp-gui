@@ -205,10 +205,10 @@ pub(super) fn build_download_args(
         // 使用 --progress-template 输出结构化进度
         // download 模板：下载阶段的进度（包含 fragment 信息以支持 HLS/DASH/直播流）
         "--progress-template".to_string(),
-        r#"download:PROGRESS_JSON:{"percent":"%(progress._percent_str|0%)s","speed":"%(progress._speed_str|)s","eta":"%(progress._eta_str|)s","downloaded":"%(progress._downloaded_bytes_str|)s","total":"%(progress._total_bytes_str|)s","fragmentIndex":"%(progress.fragment_index|0)s","fragmentCount":"%(progress.fragment_count|0)s","status":"downloading"}"#.to_string(),
+        r#"download:PROGRESS_JSON:{"percent":"%(progress._percent_str|0%)s","speed":"%(progress._speed_str|)s","eta":"%(progress._eta_str|)s","downloaded":"%(progress._downloaded_bytes_str|)s","total":"%(progress._total_bytes_str|)s","fragmentIndex":"%(progress.fragment_index|0)s","fragmentCount":"%(progress.fragment_count|0)s","videoTitle":%(info.title|)j,"playlistIndex":"%(info.playlist_index|)s","playlistCount":"%(info.playlist_count|)s","status":"downloading"}"#.to_string(),
         // postprocess 模板：后处理阶段（合并/嵌入等），前端据此区分下载与后处理
         "--progress-template".to_string(),
-        r#"postprocess:PROGRESS_JSON:{"status":"postprocessing"}"#.to_string(),
+        r#"postprocess:PROGRESS_JSON:{"status":"postprocessing","videoTitle":%(info.title|)j,"playlistIndex":"%(info.playlist_index|)s","playlistCount":"%(info.playlist_count|)s"}"#.to_string(),
         // 进度输出间隔，避免高频刷屏
         "--progress-delta".to_string(),
         "1".to_string(),

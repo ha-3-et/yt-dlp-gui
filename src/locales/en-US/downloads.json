@@ -5,6 +5,8 @@
     "noActiveTasks": "No active downloads",
     "noFinishedTasks": "No completed tasks",
     "noLogs": "No logs...",
+    "currentPlaylistVideo": "Playlist video {index} of {count}: {title}",
+    "currentPlaylistVideoNoCount": "Playlist video {index}: {title}",
     "today": "Today",
     "yesterday": "Yesterday",
     "dayBeforeYesterday": "2 days ago",
