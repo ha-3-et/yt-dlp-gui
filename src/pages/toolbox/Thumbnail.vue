@@ -11,7 +11,12 @@ import { goToolList } from "@/utils/toolbox";
 import { useToolTask } from "@/composables/useToolTask";
 import { composeOutputTemplate, renderOutputTemplate } from "@/utils/output-template";
 import { useI18n } from "vue-i18n";
-import type { ThumbnailBatchResult, ThumbnailInfo, ThumbnailVideoResult } from "@/types";
+import type {
+  ThumbnailBatchResult,
+  ThumbnailInfo,
+  ThumbnailVideoResult,
+  ToolStatus,
+} from "@/types";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -32,6 +37,7 @@ const {
 } = useToolTask<ThumbnailBatchResult>("thumbnail");
 const thumbnailVideos = ref<ThumbnailVideoResult[]>([]);
 const thumbnailErrors = ref<ThumbnailBatchResult["errors"]>([]);
+const thumbnailFetchedVideoCount = ref(0);
 const savingId = ref<string | null>(null);
 const downloadHighestQuality = ref(false);
 const autoSaveRunId = ref<string | null>(null);
@@ -41,6 +47,7 @@ const highestQualitySaving = ref(false);
 const highestQualitySaved = ref(0);
 const highestQualitySaveDir = ref("");
 const highestQualityVideoTotal = ref(0);
+const highestQualityExpectedCount = ref(0);
 const currentFetchUrls = ref<string[]>([]);
 
 const inputUrls = computed(() =>
@@ -90,11 +97,22 @@ const getResolutionLabel = (thumb: ThumbnailInfo): string => {
   return t("common.unknown");
 };
 
+const hasKnownThumbnailResolution = (thumb: ThumbnailInfo): boolean => {
+  if (thumb.width && thumb.height) return true;
+  const resolution = thumb.resolution?.trim().toLocaleLowerCase();
+  return Boolean(
+    resolution &&
+      !["unknown", "不明", "n/a", "na", t("common.unknown").toLocaleLowerCase()].includes(
+        resolution,
+      ),
+  );
+};
+
 /** 画像URL・解像度が重複するサムネイルをまとめる */
 const getVideoThumbnails = (video: ThumbnailVideoResult): ThumbnailInfo[] => {
   const seen = new Set<string>();
   const thumbnails = (video.thumbnails || [])
-    .filter((item) => item.url)
+    .filter((item) => item.url && hasKnownThumbnailResolution(item))
     .filter((item) => {
       const key = item.width && item.height ? `${item.width}x${item.height}` : item.url;
       if (seen.has(key)) return false;
@@ -105,44 +123,13 @@ const getVideoThumbnails = (video: ThumbnailVideoResult): ThumbnailInfo[] => {
       (a, b) =>
         (b.width || 0) * (b.height || 0) - (a.width || 0) * (a.height || 0),
     );
-  if (thumbnails.length === 0 && video.thumbnail) {
-    return [{ url: video.thumbnail, id: video.id || "default" }];
-  }
   return thumbnails;
 };
 
 const getHighestResolutionThumbnail = (
   video: ThumbnailVideoResult,
 ): ThumbnailInfo | undefined => {
-  const thumbnails = getVideoThumbnails(video);
-  if (thumbnails.some((thumb) => thumb.width && thumb.height)) return thumbnails[0];
-  const youtubeFallback = getYoutubeFallbackThumbnails(video);
-  if (youtubeFallback.length) return youtubeFallback[0];
-  return thumbnails.find((thumb) => thumb.url === video.thumbnail) || thumbnails[0];
-};
-
-const getYoutubeFallbackThumbnails = (video: ThumbnailVideoResult): ThumbnailInfo[] => {
-  try {
-    const source = new URL(video.sourceUrl);
-    if (!["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"].includes(source.hostname)) {
-      return [];
-    }
-    const pathSegments = source.pathname.split("/").filter(Boolean);
-    const pathId =
-      source.hostname === "youtu.be"
-        ? pathSegments[0]
-        : source.searchParams.get("v") || pathSegments[pathSegments.length - 1];
-    const id = video.id || pathId || "";
-    if (!/^[\w-]{11}$/.test(id)) return [];
-    return ["maxresdefault", "sddefault", "hq720", "hqdefault", "mqdefault", "default"].map(
-      (name) => ({
-        id: `fallback-${name}`,
-        url: `https://i.ytimg.com/vi/${id}/${name}.jpg`,
-      }),
-    );
-  } catch {
-    return [];
-  }
+  return getVideoThumbnails(video)[0];
 };
 
 const handleChooseThumbnailDownloadDir = async () => {
@@ -158,24 +145,23 @@ const handleChooseThumbnailDownloadDir = async () => {
   }
 };
 
+const ensureThumbnailFfmpeg = async (): Promise<boolean> => {
+  const status = await invoke<ToolStatus>("get_ffmpeg_status");
+  if (status.runnable) return true;
+  if (!status.isManaged) {
+    statusStore.showFfmpegSetupModal = true;
+    return false;
+  }
+
+  await invoke("download_ffmpeg");
+  return true;
+};
+
 /** 各動画の最高解像度サムネイルをダウンロードフォルダーへ直接保存 */
 const saveHighestQualityThumbnails = async (videos: ThumbnailVideoResult[]) => {
-  const videosWithoutThumbnail = videos.filter(
-    (video) =>
-      !getHighestResolutionThumbnail(video) && getYoutubeFallbackThumbnails(video).length === 0,
-  );
-  for (const video of videosWithoutThumbnail) {
-    thumbnailErrors.value.push({ url: video.sourceUrl, error: t("toolbox.noThumbnailFound") });
-  }
-  const candidates = videos.flatMap((video, index) => {
-    const videoThumbnails = getVideoThumbnails(video);
-    const hasResolution = videoThumbnails.some((thumb) => thumb.width && thumb.height);
-    const fallbackThumbnails = hasResolution ? [] : getYoutubeFallbackThumbnails(video);
+  const candidates = videos.flatMap((video) => {
     const thumbnail = getHighestResolutionThumbnail(video);
-    const selectedThumbnail = thumbnail || fallbackThumbnails[0];
-    return selectedThumbnail
-      ? [{ video, index, thumbnail: selectedThumbnail, fallbackThumbnails }]
-      : [];
+    return thumbnail ? [{ video, thumbnail }] : [];
   });
   if (candidates.length === 0) {
     window.$message.warning(t("toolbox.noThumbnailFound"));
@@ -185,40 +171,26 @@ const saveHighestQualityThumbnails = async (videos: ThumbnailVideoResult[]) => {
   highestQualitySaving.value = true;
   highestQualitySaved.value = 0;
   try {
+    if (!(await ensureThumbnailFfmpeg())) return;
+
     const directory =
       settingStore.thumbnailDownloadDir.trim() ||
       settingStore.downloadDir.trim() ||
       (await downloadDir());
     highestQualitySaveDir.value = directory;
-    const usedNames = new Set<string>();
-    for (const { video, thumbnail, fallbackThumbnails } of candidates) {
-      let filename = getThumbnailFilename(video);
-      const baseName = filename.slice(0, -".png".length);
-      let duplicate = 2;
-      while (usedNames.has(filename.toLowerCase())) {
-        filename = `${baseName} (${duplicate}).png`;
-        duplicate += 1;
-      }
-      usedNames.add(filename.toLowerCase());
+    for (const { video, thumbnail } of candidates) {
+      const filename = getThumbnailFilename(video);
       const filePath = await join(directory, filename);
-      const alternatives = fallbackThumbnails.length ? fallbackThumbnails : [thumbnail];
-      let saved = false;
-      const failures: string[] = [];
-      for (const alternative of alternatives) {
-        try {
-          await invoke("tool_save_thumbnail", {
-            url: alternative.url,
-            filePath,
-            proxy: settingStore.proxy || null,
-          });
-          highestQualitySaved.value += 1;
-          saved = true;
-          break;
-        } catch (error: unknown) {
-          failures.push(String(error));
-        }
+      try {
+        await invoke("tool_save_thumbnail", {
+          url: thumbnail.url,
+          filePath,
+          proxy: settingStore.proxy || null,
+        });
+        highestQualitySaved.value += 1;
+      } catch (error: unknown) {
+        thumbnailErrors.value.push({ url: video.sourceUrl, error: String(error) });
       }
-      if (!saved) thumbnailErrors.value.push({ url: video.sourceUrl, error: failures.join("; ") });
     }
   } catch (error: unknown) {
     showErrorDialog(String(error));
@@ -234,7 +206,10 @@ const handleFetch = async () => {
   const useHighestQuality = downloadHighestQuality.value;
   thumbnailVideos.value = [];
   thumbnailErrors.value = [];
+  thumbnailFetchedVideoCount.value = 0;
   highestQualitySaved.value = 0;
+  highestQualityVideoTotal.value = 0;
+  highestQualityExpectedCount.value = 0;
   lastFetchUsedHighestQuality.value = useHighestQuality;
   autoSaveRunId.value = null;
   autoSavedRunId.value = null;
@@ -291,12 +266,17 @@ watch(
       autoSavedRunId.value = saveRunId;
     }
     if (Array.isArray(result.items)) {
-      thumbnailVideos.value = result.items;
+      const fetchedVideos = result.items;
+      thumbnailFetchedVideoCount.value = fetchedVideos.length;
+      thumbnailVideos.value = fetchedVideos.filter(
+        (video) => getVideoThumbnails(video).length > 0,
+      );
       thumbnailErrors.value = result.errors || [];
-      highestQualityVideoTotal.value = result.expectedCount ?? result.items.length;
+      highestQualityVideoTotal.value = thumbnailVideos.value.length;
+      highestQualityExpectedCount.value = result.expectedCount ?? fetchedVideos.length;
       if (lastFetchUsedHighestQuality.value) {
         const completedUrls = new Set([
-          ...thumbnailVideos.value.map((video) => video.sourceUrl),
+          ...fetchedVideos.map((video) => video.sourceUrl),
           ...thumbnailErrors.value.map((failure) => failure.url),
         ]);
         for (const sourceUrl of currentFetchUrls.value) {
@@ -325,6 +305,12 @@ watch(
               },
             ]
           : [];
+      thumbnailFetchedVideoCount.value = thumbnailVideos.value.length;
+      thumbnailVideos.value = thumbnailVideos.value.filter(
+        (video) => getVideoThumbnails(video).length > 0,
+      );
+      highestQualityVideoTotal.value = thumbnailVideos.value.length;
+      highestQualityExpectedCount.value = thumbnailFetchedVideoCount.value;
       thumbnailErrors.value = [];
     }
     if (lastFetchUsedHighestQuality.value) {
@@ -350,6 +336,8 @@ const handleSave = async (thumb: ThumbnailInfo, video: ThumbnailVideoResult) => 
   const id = `${video.id}:${thumb.id || thumb.url}`;
   savingId.value = id;
   try {
+    if (!(await ensureThumbnailFfmpeg())) return;
+
     await invoke("tool_save_thumbnail", {
       url: thumb.url,
       filePath,
@@ -465,14 +453,14 @@ const handleSave = async (thumb: ThumbnailInfo, video: ThumbnailVideoResult) => 
         lastFetchUsedHighestQuality &&
         !loading &&
         !highestQualitySaving &&
-        highestQualityVideoTotal > thumbnailVideoCount
+        highestQualityExpectedCount > thumbnailFetchedVideoCount
       "
       type="warning"
       :title="
         $t('toolbox.thumbnailPlaylistIncomplete', {
-          expected: highestQualityVideoTotal,
-          found: thumbnailVideoCount,
-          missing: highestQualityVideoTotal - thumbnailVideoCount,
+          expected: highestQualityExpectedCount,
+          found: thumbnailFetchedVideoCount,
+          missing: highestQualityExpectedCount - thumbnailFetchedVideoCount,
         })
       "
     />
