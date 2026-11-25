@@ -160,7 +160,10 @@ pub async fn run_ytdlp_json_tracked(
 
     // 优先从 stdout 解析 JSON（yt-dlp 可能在 stderr 输出警告但仍成功，且可能输出多行格式化 JSON）
     if let Some(val) = parse_json_from_stdout(&stdout) {
-        return Ok(val);
+        if val.is_object() {
+            return Ok(val);
+        }
+        return Err("err_parse_video_info".to_string());
     }
 
     // 未找到 JSON，从 stderr 提取 ERROR 行作为错误信息

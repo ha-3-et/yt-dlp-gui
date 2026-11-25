@@ -74,13 +74,16 @@ export const useVideoStore = defineStore("video", () => {
     fetching.value = true;
     try {
       const { cookieFile, cookieBrowser } = await getCookieArgs();
-      const info = await invoke<VideoInfo>("fetch_video_info", {
+      const info = await invoke<VideoInfo | null>("fetch_video_info", {
         url: targetUrl,
         cookieFile,
         cookieBrowser,
         proxy: settingStore.proxy || null,
         customArgs: options.customArgs ?? settingStore.defaultCustomArgs,
       });
+      if (!info || typeof info !== "object" || Array.isArray(info)) {
+        throw new Error("err_parse_video_info");
+      }
       let videoInfo: VideoInfo;
       let isPlaylist = false;
       let playlistEntries: PlaylistEntry[] = [];
