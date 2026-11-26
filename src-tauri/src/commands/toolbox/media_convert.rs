@@ -238,7 +238,12 @@ fn build_output_path(
         .map(PathBuf::from)
         .or_else(|| input.parent().map(Path::to_path_buf))
         .ok_or_else(|| "err_media_missing_output_directory".to_string())?;
-    Ok(directory.join(stem).with_extension(extension))
+    // `with_extension` would treat a dot in the title (for example, `.447`)
+    // as the extension because `stem` no longer includes the actual input extension.
+    let mut output_name = stem.to_os_string();
+    output_name.push(".");
+    output_name.push(extension);
+    Ok(directory.join(output_name))
 }
 
 fn error_summary(stderr: &[u8]) -> String {
