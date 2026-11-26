@@ -60,6 +60,9 @@ jobs:
     needs: prepare-release
     strategy:
       fail-fast: false
+      # Each target updates the same latest.json updater asset on the draft release.
+      # Serialize jobs so they cannot delete/upload that asset at the same time.
+      max-parallel: 1
       matrix:
         include:
           - platform: windows-latest
@@ -142,6 +145,7 @@ jobs:
           prerelease: false
           generateReleaseNotes: false
           includeUpdaterJson: true
+          retryAttempts: 3
           args: --target ${{ matrix.target }}
 
       - name: Verify macOS bundle resource seal
