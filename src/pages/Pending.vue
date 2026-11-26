@@ -126,7 +126,9 @@ const handleDownload = async () => {
     dirCardRef.value?.scrollIntoView({ behavior: "smooth", block: "center" });
   } else if (result === "started" || result === "queued") {
     pendingStore.remove(item.id);
-    router.push({ name: "downloads" });
+    if (pendingStore.items.length === 0) {
+      router.push({ name: "downloads" });
+    }
   }
 };
 </script>
