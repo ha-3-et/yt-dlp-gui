@@ -230,6 +230,8 @@ export interface PendingItem extends FetchedVideoData {
   id: string;
   createdAt: number;
   selectedPlaylistItems: number[];
+  playlistIndividualFormats?: boolean;
+  playlistFormatSelections?: Record<number, PlaylistFormatSelection>;
   downloadMode: "default" | "video" | "audio";
   selectedVideoFormat: string;
   selectedAudioFormat: string;
@@ -254,6 +256,11 @@ export interface PendingItem extends FetchedVideoData {
   selectedSubtitles: string[];
   /** 是否从开始下载直播流（--live-from-start） */
   liveFromStart: boolean;
+}
+
+export interface PlaylistFormatSelection {
+  videoFormat: string;
+  audioFormat: string;
 }
 
 export interface PlaylistEntry {

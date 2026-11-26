@@ -1,7 +1,14 @@
 import { defineStore } from "pinia";
 import { useSettingStore } from "@/stores/setting";
 import { getCodecKey } from "@/utils/formats";
-import type { FetchedVideoData, PendingItem, VideoFormat } from "@/types";
+import { getPlaylistEntryFormats } from "@/utils/playlist";
+import type {
+  FetchedVideoData,
+  PendingItem,
+  PlaylistEntry,
+  PlaylistFormatSelection,
+  VideoFormat,
+} from "@/types";
 
 const generateId = () => `pd_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
@@ -21,6 +28,25 @@ const selectVideoFormat = (
   );
 };
 
+const selectPlaylistFormat = (
+  entry: PlaylistEntry,
+  videoFormats: VideoFormat[],
+  audioFormats: VideoFormat[],
+  preferredVideoCodec: string,
+  preferredAudioCodec: string,
+): PlaylistFormatSelection => {
+  const formats = getPlaylistEntryFormats(entry, videoFormats, audioFormats);
+  return {
+    videoFormat: selectVideoFormat(formats.videoFormats, preferredVideoCodec),
+    audioFormat:
+      formats.audioFormats.find(
+        (format) => getCodecKey(format.acodec) === preferredAudioCodec,
+      )?.format_id ??
+      formats.audioFormats[0]?.format_id ??
+      "",
+  };
+};
+
 /**
  * 根据解析后的视频元数据创建新的待下载任务配置对象
  *
@@ -31,6 +57,29 @@ const selectVideoFormat = (
 export const createPendingItem = (data: FetchedVideoData, quick = false): PendingItem => {
   const settingStore = useSettingStore();
   const maxHeight = quick ? settingStore.quickMaxHeight : undefined;
+  const selectedVideoFormat = selectVideoFormat(
+    data.videoFormats,
+    settingStore.preferredVideoCodec,
+    maxHeight,
+  );
+  const selectedAudioFormat =
+    data.audioFormats.find(
+      (format) => getCodecKey(format.acodec) === settingStore.preferredAudioCodec,
+    )?.format_id ??
+    data.audioFormats[0]?.format_id ??
+    "";
+  const playlistFormatSelections = Object.fromEntries(
+    data.playlistEntries.map((entry, index) => [
+      entry.playlist_index ?? index + 1,
+      selectPlaylistFormat(
+        entry,
+        data.videoFormats,
+        data.audioFormats,
+        settingStore.preferredVideoCodec,
+        settingStore.preferredAudioCodec,
+      ),
+    ]),
+  );
   return {
     ...data,
     id: generateId(),
@@ -38,18 +87,11 @@ export const createPendingItem = (data: FetchedVideoData, quick = false): Pendin
     selectedPlaylistItems: data.isPlaylist
       ? data.playlistEntries.map((entry, i) => entry.playlist_index ?? i + 1)
       : [],
+    playlistIndividualFormats: false,
+    playlistFormatSelections,
     downloadMode: quick ? settingStore.quickDownloadMode : settingStore.defaultDownloadMode,
-    selectedVideoFormat: selectVideoFormat(
-      data.videoFormats,
-      settingStore.preferredVideoCodec,
-      maxHeight,
-    ),
-    selectedAudioFormat:
-      data.audioFormats.find(
-        (format) => getCodecKey(format.acodec) === settingStore.preferredAudioCodec,
-      )?.format_id ??
-      data.audioFormats[0]?.format_id ??
-      "",
+    selectedVideoFormat,
+    selectedAudioFormat,
     startTime: null,
     endTime: null,
     forceKeyframesAtCuts: false,
@@ -129,15 +171,46 @@ export const usePendingStore = defineStore("pending", () => {
   const refresh = (id: string, data: FetchedVideoData): void => {
     const item = items.value.find((i) => i.id === id);
     if (!item) return;
+    const settingStore = useSettingStore();
     const wasPlaylist = item.isPlaylist;
     const selectedVideo = item.selectedVideoFormat;
     const selectedAudio = item.selectedAudioFormat.split("+");
+    const previousPlaylistFormats = item.playlistFormatSelections ?? {};
     item.url = data.url;
     item.videoInfo = data.videoInfo;
     item.videoFormats = data.videoFormats;
     item.audioFormats = data.audioFormats;
     item.isPlaylist = data.isPlaylist;
     item.playlistEntries = data.playlistEntries;
+    item.playlistFormatSelections = Object.fromEntries(
+      data.playlistEntries.map((entry, index) => {
+        const playlistIndex = entry.playlist_index ?? index + 1;
+        const previous = previousPlaylistFormats[playlistIndex];
+        const defaults = selectPlaylistFormat(
+          entry,
+          data.videoFormats,
+          data.audioFormats,
+          settingStore.preferredVideoCodec,
+          settingStore.preferredAudioCodec,
+        );
+        const formats = getPlaylistEntryFormats(entry, data.videoFormats, data.audioFormats);
+        return [
+          playlistIndex,
+          {
+            videoFormat: formats.videoFormats.some(
+              (format) => format.format_id === previous?.videoFormat,
+            )
+              ? previous.videoFormat
+              : defaults.videoFormat,
+            audioFormat: formats.audioFormats.some(
+              (format) => format.format_id === previous?.audioFormat,
+            )
+              ? previous.audioFormat
+              : defaults.audioFormat,
+          },
+        ];
+      }),
+    );
     const indices = data.playlistEntries.map((entry, i) => entry.playlist_index ?? i + 1);
     item.selectedPlaylistItems = data.isPlaylist
       ? wasPlaylist

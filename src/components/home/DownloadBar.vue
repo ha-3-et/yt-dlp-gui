@@ -2,6 +2,7 @@
 defineProps<{
   estimatedSizeText: string;
   disabled?: boolean;
+  loading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -18,7 +19,13 @@ const emit = defineEmits<{
           <n-text depth="3">{{ $t("detail.estimatedSize") }}</n-text>
           <n-text strong>{{ estimatedSizeText }}</n-text>
         </n-flex>
-        <n-button type="primary" round :disabled="disabled" @click="emit('download')">
+        <n-button
+          type="primary"
+          round
+          :disabled="disabled"
+          :loading="loading"
+          @click="emit('download')"
+        >
           <template #icon>
             <n-icon>
               <icon-mdi-download />

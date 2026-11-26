@@ -73,6 +73,8 @@
   "detail": {
     "videoLink": "動画リンク",
     "playlist": "プレイリスト",
+    "individualPlaylistFormats": "動画ごとに形式を選択",
+    "individualPlaylistFormatsHint": "オンにすると、選択した各動画の映像形式と音声形式を個別に指定してダウンロードします。",
     "setDownloadDirFirst": "先にダウンロード先を設定してください",
     "refreshSuccess": "更新しました",
     "startDownloadFailed": "ダウンロードの開始に失敗しました",

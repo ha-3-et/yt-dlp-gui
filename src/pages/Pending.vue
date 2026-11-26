@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { formatFileSize } from "@/utils/format";
-import { estimateFileSize } from "@/utils/normalizer";
+import {
+  estimateFileSize,
+  normalizeAudioFormat,
+  normalizeVideoFormat,
+} from "@/utils/normalizer";
 import { useVideoStore } from "@/stores/video";
 import { useSettingStore } from "@/stores/setting";
 import { usePendingStore } from "@/stores/pending";
 import { useDownloadLauncher } from "@/composables/useDownloadLauncher";
+import { getPlaylistEntryFormats } from "@/utils/playlist";
 import { useI18n } from "vue-i18n";
-import type { VideoInfo } from "@/types";
+import type { PlaylistEntry, VideoInfo } from "@/types";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -16,6 +21,8 @@ const pendingStore = usePendingStore();
 const { launchDownload } = useDownloadLauncher();
 
 const activeItem = computed(() => pendingStore.activeItem);
+const playlistIndex = (entry: PlaylistEntry, index: number) => entry.playlist_index ?? index + 1;
+const startingDownload = ref(false);
 
 /**
  * 待下载页偏好型选项持久化
@@ -63,6 +70,31 @@ const estimatedSize = computed(() => {
   const item = activeItem.value;
   if (!item) return 0;
   let total = 0;
+  if (item.isPlaylist && item.playlistIndividualFormats) {
+    for (const index of item.selectedPlaylistItems) {
+      const position = item.playlistEntries.findIndex(
+        (entry, entryPosition) => playlistIndex(entry, entryPosition) === index,
+      );
+      const entry = item.playlistEntries[position];
+      if (!entry) continue;
+      const formats = getPlaylistEntryFormats(entry, item.videoFormats, item.audioFormats);
+      const selection = item.playlistFormatSelections?.[index];
+      const duration = entry.duration || 0;
+      if (item.downloadMode !== "audio" && !item.extractAudio) {
+        const video = formats.videoFormats.find(
+          (format) => format.format_id === selection?.videoFormat,
+        );
+        if (video) total += estimateFileSize(video, duration).size;
+      }
+      if (item.downloadMode !== "video" || item.extractAudio) {
+        const audio = formats.audioFormats.find(
+          (format) => format.format_id === selection?.audioFormat,
+        );
+        if (audio) total += estimateFileSize(audio, duration).size;
+      }
+    }
+    return total;
+  }
   const duration = item.videoInfo?.duration || 0;
   if (item.downloadMode !== "audio") {
     const vf = item.videoFormats.find((f) => f.format_id === item.selectedVideoFormat);
@@ -85,6 +117,104 @@ const estimatedSizeText = computed(() => {
   if (!estimatedSize.value) return t("common.unknown");
   return formatFileSize(estimatedSize.value);
 });
+
+const playlistSelection = (entry: PlaylistEntry, index: number) =>
+  activeItem.value?.playlistFormatSelections?.[playlistIndex(entry, index)] ?? {
+    videoFormat: "",
+    audioFormat: "",
+  };
+
+const setPlaylistFormat = (
+  entry: PlaylistEntry,
+  index: number,
+  kind: "videoFormat" | "audioFormat",
+  value: string | null,
+) => {
+  const item = activeItem.value;
+  if (!item) return;
+  const key = playlistIndex(entry, index);
+  item.playlistFormatSelections ??= {};
+  item.playlistFormatSelections[key] ??= { videoFormat: "", audioFormat: "" };
+  item.playlistFormatSelections[key][kind] = value || "";
+};
+
+const getPlaylistFormatOptions = (entry: PlaylistEntry, kind: "video" | "audio") => {
+  const item = activeItem.value;
+  if (!item) return [];
+  const formats = getPlaylistEntryFormats(entry, item.videoFormats, item.audioFormats);
+  const selectedFormats = kind === "video" ? formats.videoFormats : formats.audioFormats;
+  return selectedFormats.map((format) => {
+    const parts =
+      kind === "video"
+        ? (() => {
+            const normalized = normalizeVideoFormat(format, entry.duration || 0);
+            return [
+              normalized.resolutionLabel,
+              normalized.fpsLabel,
+              normalized.codec,
+              normalized.container,
+              normalized.filesizeLabel,
+              `#${normalized.formatId}`,
+            ];
+          })()
+        : (() => {
+            const normalized = normalizeAudioFormat(format, entry.duration || 0);
+            return [
+              normalized.languageLabel || normalized.language,
+              normalized.bitrateLabel,
+              normalized.codec,
+              normalized.channelsLabel,
+              normalized.container,
+              normalized.filesizeLabel,
+              `#${normalized.formatId}`,
+            ];
+          })();
+    return { label: parts.filter(Boolean).join(" · "), value: format.format_id };
+  });
+};
+
+const launchPlaylistWithIndividualFormats = async (item: NonNullable<typeof activeItem.value>) => {
+  const selectedItems = [...item.selectedPlaylistItems];
+  const remainingItems: number[] = [];
+  for (let i = 0; i < selectedItems.length; i += 1) {
+    const index = selectedItems[i];
+    const entryIndex = item.playlistEntries.findIndex(
+      (entry, entryPosition) => playlistIndex(entry, entryPosition) === index,
+    );
+    const entry = item.playlistEntries[entryIndex];
+    if (!entry) {
+      remainingItems.push(index);
+      continue;
+    }
+    const formats = getPlaylistEntryFormats(entry, item.videoFormats, item.audioFormats);
+    const selection = item.playlistFormatSelections?.[index] ?? {
+      videoFormat: item.selectedVideoFormat,
+      audioFormat: item.selectedAudioFormat,
+    };
+    const result = await launchDownload({
+      ...item,
+      videoInfo: {
+        ...item.videoInfo,
+        title: entry.title || item.videoInfo.title,
+        thumbnail: entry.thumbnail || item.videoInfo.thumbnail,
+        duration: entry.duration || 0,
+      },
+      videoFormats: formats.videoFormats,
+      audioFormats: formats.audioFormats,
+      selectedPlaylistItems: [index],
+      selectedVideoFormat: selection.videoFormat,
+      selectedAudioFormat: selection.audioFormat,
+    });
+    if (result !== "started" && result !== "queued") {
+      if (result === "missing-directory") {
+        dirCardRef.value?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      remainingItems.push(index, ...selectedItems.slice(i + 1));
+      break;
+    }
+  }
+  item.selectedPlaylistItems = remainingItems;
+};
 
 const dirCardRef = ref<HTMLElement | null>(null);
 
@@ -120,15 +250,30 @@ const handleRefresh = async () => {
 /** 开始下载当前项 */
 const handleDownload = async () => {
   const item = activeItem.value;
-  if (!item) return;
-  const result = await launchDownload(item);
-  if (result === "missing-directory") {
-    dirCardRef.value?.scrollIntoView({ behavior: "smooth", block: "center" });
-  } else if (result === "started" || result === "queued") {
-    pendingStore.remove(item.id);
-    if (pendingStore.items.length === 0) {
-      router.push({ name: "downloads" });
+  if (!item || startingDownload.value) return;
+  startingDownload.value = true;
+  try {
+    if (item.isPlaylist && item.playlistIndividualFormats) {
+      await launchPlaylistWithIndividualFormats(item);
+      if (item.selectedPlaylistItems.length > 0) return;
+      pendingStore.remove(item.id);
+      if (pendingStore.items.length === 0) {
+        router.push({ name: "downloads" });
+      }
+      return;
     }
+
+    const result = await launchDownload(item);
+    if (result === "missing-directory") {
+      dirCardRef.value?.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else if (result === "started" || result === "queued") {
+      pendingStore.remove(item.id);
+      if (pendingStore.items.length === 0) {
+        router.push({ name: "downloads" });
+      }
+    }
+  } finally {
+    startingDownload.value = false;
   }
 };
 </script>
@@ -209,7 +354,17 @@ const handleDownload = async () => {
             </n-flex>
           </template>
           <template #header-extra>
-            <n-flex :size="8">
+            <n-flex align="center" :size="8" :wrap="true">
+              <n-flex align="center" :size="6">
+                <n-switch
+                  :value="Boolean(activeItem.playlistIndividualFormats)"
+                  size="small"
+                  @update:value="activeItem.playlistIndividualFormats = $event"
+                />
+                <n-text depth="2" style="font-size: 12px">
+                  {{ $t("detail.individualPlaylistFormats") }}
+                </n-text>
+              </n-flex>
               <n-button
                 size="tiny"
                 secondary
@@ -226,14 +381,53 @@ const handleDownload = async () => {
               </n-button>
             </n-flex>
           </template>
+          <n-alert
+            v-if="activeItem.playlistIndividualFormats"
+            type="info"
+            :bordered="false"
+            style="margin-bottom: 8px"
+          >
+            {{ $t("detail.individualPlaylistFormatsHint") }}
+          </n-alert>
           <n-checkbox-group v-model:value="activeItem.selectedPlaylistItems">
             <n-flex vertical :size="6">
-              <n-checkbox
+              <div
                 v-for="(entry, index) in activeItem.playlistEntries"
                 :key="entry.id"
-                :value="entry.playlist_index ?? index + 1"
-                :label="`P${entry.playlist_index ?? index + 1} ${entry.title}`"
-              />
+                class="playlist-entry"
+              >
+                <n-checkbox
+                  :value="playlistIndex(entry, index)"
+                  :label="`P${playlistIndex(entry, index)} ${entry.title}`"
+                />
+                <n-flex
+                  v-if="
+                    activeItem.playlistIndividualFormats &&
+                    activeItem.selectedPlaylistItems.includes(playlistIndex(entry, index))
+                  "
+                  :size="8"
+                  class="playlist-entry-formats"
+                >
+                  <n-select
+                    v-if="activeItem.downloadMode !== 'audio' && !activeItem.extractAudio"
+                    :value="playlistSelection(entry, index).videoFormat"
+                    :options="getPlaylistFormatOptions(entry, 'video')"
+                    :placeholder="$t('detail.video')"
+                    size="small"
+                    style="flex: 1; min-width: 0"
+                    @update:value="setPlaylistFormat(entry, index, 'videoFormat', $event)"
+                  />
+                  <n-select
+                    v-if="activeItem.downloadMode !== 'video' || activeItem.extractAudio"
+                    :value="playlistSelection(entry, index).audioFormat"
+                    :options="getPlaylistFormatOptions(entry, 'audio')"
+                    :placeholder="$t('detail.audio')"
+                    size="small"
+                    style="flex: 1; min-width: 0"
+                    @update:value="setPlaylistFormat(entry, index, 'audioFormat', $event)"
+                  />
+                </n-flex>
+              </div>
             </n-flex>
           </n-checkbox-group>
         </n-card>
@@ -284,7 +478,11 @@ const handleDownload = async () => {
 
         <DownloadBar
           :estimated-size-text="estimatedSizeText"
-          :disabled="activeItem.isPlaylist && !activeItem.selectedPlaylistItems.length"
+          :loading="startingDownload"
+          :disabled="
+            startingDownload ||
+            (activeItem.isPlaylist && !activeItem.selectedPlaylistItems.length)
+          "
           @download="handleDownload"
         />
       </div>
@@ -325,6 +523,14 @@ const handleDownload = async () => {
 
   .section-card {
     margin-bottom: 16px;
+  }
+
+  .playlist-entry {
+    min-width: 0;
+  }
+
+  .playlist-entry-formats {
+    margin: 4px 0 4px 26px;
   }
 
   .pending-content {

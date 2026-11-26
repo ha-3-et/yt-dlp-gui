@@ -73,6 +73,8 @@
   "detail": {
     "videoLink": "Video URL",
     "playlist": "Playlist",
+    "individualPlaylistFormats": "Choose formats per video",
+    "individualPlaylistFormatsHint": "When enabled, each selected video is downloaded with its own video and audio format choices.",
     "setDownloadDirFirst": "Please set a download directory first",
     "refreshSuccess": "Refreshed successfully",
     "startDownloadFailed": "Failed to start download",

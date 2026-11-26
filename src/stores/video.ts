@@ -98,6 +98,7 @@ export const useVideoStore = defineStore("video", () => {
           duration: e.duration ?? null,
           url: e.url || "",
           playlist_index: e.playlist_index,
+          formats: e.formats || [],
         }));
         const firstEntry = entries[0];
         const formats: VideoFormat[] = firstEntry?.formats || info.formats || [];
