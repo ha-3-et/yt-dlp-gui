@@ -48,6 +48,11 @@ const router = createRouter({
           component: () => import("@/pages/toolbox/LiveChat.vue"),
         },
         {
+          path: "media-convert",
+          name: "toolbox-media-convert",
+          component: () => import("@/pages/toolbox/MediaConvert.vue"),
+        },
+        {
           path: "chapters",
           name: "toolbox-chapters",
           component: () => import("@/pages/toolbox/Chapters.vue"),

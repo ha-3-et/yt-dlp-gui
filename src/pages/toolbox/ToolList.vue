@@ -8,6 +8,7 @@ import IconMdiCommentTextMultipleOutline from "~icons/mdi/comment-text-multiple-
 import IconMdiAccountBoxMultipleOutline from "~icons/mdi/account-box-multiple-outline";
 import IconMdiPuzzleOutline from "~icons/mdi/puzzle-outline";
 import IconMdiOpenInApp from "~icons/mdi/open-in-app";
+import IconMdiMovieOpenCog from "~icons/mdi/movie-open-cog";
 import { useI18n } from "vue-i18n";
 
 useI18n();
@@ -39,6 +40,14 @@ const tools: ToolItem[] = [
     bg: "rgba(24,160,88,0.1)",
     titleKey: "toolbox.thumbnailTitle",
     descKey: "toolbox.thumbnailDesc",
+  },
+  {
+    key: "media-convert",
+    icon: IconMdiMovieOpenCog,
+    color: "#7c3aed",
+    bg: "rgba(124,58,237,0.1)",
+    titleKey: "toolbox.mediaConvertTitle",
+    descKey: "toolbox.mediaConvertDesc",
   },
   {
     key: "subtitles",
