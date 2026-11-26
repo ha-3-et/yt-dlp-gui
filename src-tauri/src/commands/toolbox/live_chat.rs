@@ -12,6 +12,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct LiveChatMessage {
     pub idx: usize,
+    pub vpos: i64,
     pub time: String,
     pub timestamp_usec: i64,
     pub author: String,
@@ -65,6 +66,16 @@ fn parse_live_chat_line(line: &str) -> Option<LiveChatMessage> {
         .and_then(Value::as_str)
         .and_then(|value| value.parse::<i64>().ok())
         .unwrap_or_default();
+    let vpos = root
+        .pointer("/replayChatItemAction/videoOffsetTimeMsec")
+        .and_then(Value::as_str)
+        .and_then(|value| value.parse::<i64>().ok())
+        .or_else(|| {
+            root.pointer("/replayChatItemAction/videoOffsetTimeMsec")
+                .and_then(Value::as_i64)
+        })
+        .unwrap_or_default()
+        / 10;
     let time = renderer
         .pointer("/timestampText/simpleText")
         .and_then(Value::as_str)
@@ -81,6 +92,7 @@ fn parse_live_chat_line(line: &str) -> Option<LiveChatMessage> {
 
     Some(LiveChatMessage {
         idx: 0,
+        vpos,
         time,
         timestamp_usec,
         author,

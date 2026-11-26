@@ -69,7 +69,7 @@ const allFieldKeys: FieldKey[] = [
 ];
 const selectedFields = ref<FieldKey[]>([...allFieldKeys]);
 
-const exportFormat = ref<"json" | "csv">("json");
+const exportFormat = ref<"json" | "csv" | "xml">("json");
 
 const allFieldsSelected = computed(() => selectedFields.value.length === allFieldKeys.length);
 const someFieldsSelected = computed(
@@ -181,13 +181,18 @@ watch(taskResult, (items) => {
 });
 
 /** 构建导出数据：有选中导出选中行，否则导出筛选后的全部行 */
-const buildExportData = () => {
-  const keys = selectedFields.value;
+const getExportMessages = () => {
   const checkedSet = new Set(checkedKeys.value);
-  const source =
+  return (
     checkedKeys.value.length > 0
       ? filteredMessages.value.filter((m) => checkedSet.has(m.idx))
-      : filteredMessages.value;
+      : filteredMessages.value
+  );
+};
+
+const buildExportData = () => {
+  const keys = selectedFields.value;
+  const source = getExportMessages();
   return source.map((msg) => {
     const obj: Record<string, unknown> = {};
     for (const key of keys) {
@@ -196,6 +201,24 @@ const buildExportData = () => {
     return obj;
   });
 };
+
+const escapeXml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+
+const exportXml = (items: LiveChatMessage[]) =>
+  [
+    "<packet>",
+    ...items.map(
+      (item) =>
+        `  <chat vpos='${item.vpos}' no='${item.idx + 1}' user_id='${escapeXml(item.author)}'> ${escapeXml(item.message)} </chat>`,
+    ),
+    "</packet>",
+  ].join("\n");
 
 const exportJson = (data: Record<string, unknown>[]) => {
   return JSON.stringify(data, null, 2);
@@ -224,7 +247,7 @@ const exportCount = computed(() => {
 
 /** 另存为文件 */
 const handleSave = async () => {
-  if (selectedFields.value.length === 0) {
+  if (exportFormat.value !== "xml" && selectedFields.value.length === 0) {
     window.$message.warning(t("toolbox.selectAtLeastOneField"));
     return;
   }
@@ -240,7 +263,12 @@ const handleSave = async () => {
   saving.value = true;
   try {
     const data = buildExportData();
-    const content = ext === "json" ? exportJson(data) : exportCsv(data);
+    const content =
+      ext === "xml"
+        ? exportXml(getExportMessages())
+        : ext === "json"
+          ? exportJson(data)
+          : exportCsv(data);
     await invoke("tool_save_text_to_file", { content, filePath });
     window.$message.success(t("toolbox.chatDataSaved"));
   } catch (e: unknown) {
@@ -321,6 +349,7 @@ const handleSave = async () => {
             :options="[
               { label: 'JSON', value: 'json' },
               { label: 'CSV', value: 'csv' },
+              { label: 'XML', value: 'xml' },
             ]"
             size="small"
             style="width: 90px"
@@ -328,7 +357,7 @@ const handleSave = async () => {
           <n-button
             size="small"
             :loading="saving"
-            :disabled="selectedFields.length === 0 || saving"
+            :disabled="(exportFormat !== 'xml' && selectedFields.length === 0) || saving"
             @click="handleSave"
           >
             <template #icon>

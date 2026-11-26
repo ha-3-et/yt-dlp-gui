@@ -352,6 +352,7 @@ export interface CommentsInfo {
 
 export interface LiveChatMessage {
   idx: number;
+  vpos: number;
   time: string;
   timestamp_usec: number;
   author: string;
